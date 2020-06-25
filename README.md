@@ -1,28 +1,46 @@
 # cli_chat
 This is a multithreaded TCP chat on python3
 
+## Features:
+
+* Asymmetric encryption (**RSA**)
+* Interaction commands:
+    
+> 
+ !help - Display this menu
+>    
+ !aou - Amount of users online
+>    
+ !lou - List of users online
+>   
+ !exit - Exit from the chat
+ 
+
+
 ## How to use:
 1. Install python packages:
 
-    `sudo pip3 install clored`
+ `sudo pip3 install colored rsa`
 
 2. Clone the repo
 
-    `git clone https://github.com/edvirs/cli_chat`
+ `git clone https://github.com/edvirs/cli_chat`
 
-3. Launch server.py with arguments (port, current OS (win/linux))
+3. Setup config files (config\_s.py / config_c.py)
 
-    Exemple:
+4. Launch server.py 
 
-    `python3 server.py 9090 linux`
+ `python3 server.py`
 
-4. Launch client.py with arguments (current OS(win/linux) , server ip , server port , nickname)
+5. Launch client.py with argv (nickname)
+    
+ Exemple:
 
-    Exemple:
+ `python3 client.py edvirs`
 
-    `python3 client.py linux 192.168.0.100 9090 edvirs`
 
-### NOTICE!
+
+# NOTICE!
 If you want to use this chat in global network , you have to open port , which you want to use , on your router
 
-This only applies server!
+**This only applies to the server!**
