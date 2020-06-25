@@ -6,13 +6,10 @@ This is a multithreaded TCP chat on python3
 * Asymmetric encryption (**RSA**)
 * Interaction commands:
     
-> 
- !help - Display this menu
->    
+ 
+ >!help - Display this menu
  !aou - Amount of users online
->    
  !lou - List of users online
->   
  !exit - Exit from the chat
  
 
@@ -20,23 +17,22 @@ This is a multithreaded TCP chat on python3
 ## How to use:
 1. Install python packages:
 
- `sudo pip3 install colored rsa`
+   `sudo pip3 install colored rsa`
 
 2. Clone the repo
 
- `git clone https://github.com/edvirs/cli_chat`
+    `git clone https://github.com/edvirs/cli_chat`
 
 3. Setup config files (config\_s.py / config_c.py)
 
 4. Launch server.py 
-
- `python3 server.py`
+    
+    `python3 server.py`
 
 5. Launch client.py with argv (nickname)
     
- Exemple:
-
- `python3 client.py edvirs`
+    Exemple:
+`python3 client.py edvirs`
 
 
 
