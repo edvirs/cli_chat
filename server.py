@@ -1,4 +1,4 @@
-clearimport os ,socket ,sys ,time ,functions , threading , rsa , config_s
+import os ,socket ,sys ,time ,functions , threading , rsa , config_s
 from colored import fg ,attr
 
 port = int(config_s.port)
