@@ -119,7 +119,5 @@ if __name__ == '__main__':
 		t1.join()
 	except KeyboardInterrupt:
 		if_error()
-		pass
 	except:
 		if_error()
-		pass
