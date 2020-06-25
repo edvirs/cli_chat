@@ -8,9 +8,12 @@ This is a multithreaded TCP chat on python3
     
  
  >!help - Display this menu
- !aou - Amount of users online
- !lou - List of users online
- !exit - Exit from the chat
+ 
+ >!aou - Amount of users online
+ 
+ >!lou - List of users online
+ 
+ >!exit - Exit from the chat
  
 
 
