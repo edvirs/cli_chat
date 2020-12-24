@@ -1,5 +1,5 @@
 # cli_chat
-This is a multithreaded TCP chat on python3
+This is a multithreaded TCP chat on python3 with command-line interface
 
 ## Features:
 
