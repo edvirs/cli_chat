@@ -1,0 +1,6 @@
+{
+  "current_OS": "linux",
+  "port": "9090",
+  "amount_of_users": "5",
+  "keys_exchanging_delay": "4"
+}

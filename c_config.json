@@ -1,0 +1,6 @@
+{
+  "current_OS": "linux",
+  "server_port": "9090",
+  "server_ip": "",
+  "keys_exchanging_delay": "4"
+}
