@@ -3,143 +3,138 @@ from colored import fg, attr
 
 
 def if_error():
-    for i in clients:
-        client_addr, client_pubkey = i
-        client_addr.send(rsa.encrypt('!server_shutdown'.encode('utf-8'), client_pubkey))
+	global server_connection
+	if server_connection:
+		sock.send(rsa.encrypt('!exit'.encode('utf-8'), server_pubkey))
+		time.sleep(0.1)
+		sock.close()
+		os.system(terminal_clear)
+		print(fg('red') + '\n\nClient closed\n\n' + res_C)
+	time.sleep(0.1)
+	sock.close()
 
-    sock.close()
-    os.system(terminal_clear)
-    print(fg('red') + '\n\nServer closed\n\n' + '\n\nPress Ctrl+C to exit\n\n' + attr('reset'))
-    sys.exit()
-
-
-def keys_generation():
-    global server_pubkey, server_privkey
-    os.system(terminal_clear)
-    print(green_C + 'loading ...' + res_C)
-    server_pubkey, server_privkey = rsa.newkeys(2048)
-    os.system(terminal_clear)
-    print('[Keys generated]')
-    print('[Server started]')
-
-
-def transmission(data, nickname, current_client):
-    global clients
-    for i in clients:
-        client_addr, client_pubkey = i
-        if client_addr != current_client:
-            client_addr.send(
-                rsa.encrypt((green_C + nickname + ': ' + res_C + main_C + data).encode('utf-8'), client_pubkey))
+def transmission():
+	exit = False
+	while not exit:
+		while True:
+			data = input(main_C)
+			if data == '!exit':
+				if_error()
+				exit = True
+				break
+			elif data == '!help':
+				print('''
+{green}!help{res} - Display this menu
+{green}!aou{res} - Amount of users online
+{green}!lou{res} - List of users online
+{green}!exit{res} - Exit from the chat
+				'''.format(green=green_C, res=res_C))
+				break
+			elif len(data) > 200:
+				print(fg('red') + 'Message is too long' + main_C)
+				break
+			elif data == '' or data == ' ' or data == '  ' or data == '!server_shutdown':
+				break
+			sock.send(rsa.encrypt(data.encode('utf-8'), server_pubkey))
 
 
 def receiving():
-    global clients
-    while True:
-        client, addr = sock.accept()
-        time.sleep(int(config_data['keys_exchanging_delay'])/2)
-        client.send(str(server_pubkey.n).encode('utf-8'))
-        time.sleep(int(config_data['keys_exchanging_delay'])/2)
-        client.send(str(server_pubkey.e).encode('utf-8'))
-        nickname = (rsa.decrypt(client.recv(2048), server_privkey)).decode('utf-8')
-        current_client_pubkey_n = client.recv(2048).decode('utf-8')
-        current_client_pubkey_e = client.recv(2048).decode('utf-8')
-        current_client_pubkey = rsa.PublicKey(int(current_client_pubkey_n), int(current_client_pubkey_e))
-        client_info = client, current_client_pubkey
-        for i in clients:
-            client_addr, client_pubkey = i
-            client_addr.send(rsa.encrypt(('{res}[{green}{nickname}{res}]{blue} →  Join chat {res}'.format(res=res_C,
-            nickname=nickname, green=green_C, blue=blue_C)).encode('utf-8'), client_pubkey))
-        clients.append(client_info)
-        list_of_users.append(nickname)
-        print('[{addr}] [{nickname}] Connected'.format(addr=str(addr), nickname=str(nickname)))
-        while True:
-            permission_to_transmission = True
-            data = client.recv(2048)
-            data = (rsa.decrypt(data, server_privkey)).decode('utf-8')
-            if data == '!exit':
-                client.close()
-                print('[{addr}] [{nickname}] Disconnected'.format(addr=str(addr), nickname=str(nickname)))
-                time.sleep(0.1)
-                clients.remove(client_info)
-                list_of_users.remove(nickname)
-                for i in clients:
-                    client_addr, client_pubkey = i
-                    client_addr.send(rsa.encrypt(('{res}[{green}{nickname}{res}]{blue} →  Left chat {res}'.format(res=res_C,
-                        nickname=nickname, green=green_C, blue=blue_C)).encode('utf-8'), client_pubkey))
-                break
-            elif data == '!aou':
-                amount = str(len(list_of_users))
-                client.send(rsa.encrypt(('{green}Amount of users online: {blue}{amount}{res}'.format(green=green_C, blue=blue_C,
-                amount=amount, res=res_C)).encode('utf-8'), current_client_pubkey))
-                permission_to_transmission = False
-            elif data == '!lou':
-                for i in list_of_users:
-                    client.send(rsa.encrypt((green_C + i + res_C).encode('utf-8'), current_client_pubkey))
-                permission_to_transmission = False
-
-            if permission_to_transmission:
-                print('[{addr}] [{nickname}] →  '.format(addr=str(addr), nickname=str(nickname)) + 'sent a message')
-                transmission(data, nickname, client)
+	global server_connection
+	while True:
+		data = sock.recv(2048)
+		data = (rsa.decrypt(data, my_privkey)).decode('utf-8')
+		if data == '!server_shutdown':
+			os.system(terminal_clear)
+			print(fg('red') + '\n\nServer has closed\n\n' + '\n\nPress Ctrl+C to exit\n\n' + res_C)
+			server_connection = False
+			sock.close()
+			break
+		print(data + main_C)
+	sys.exit()
 
 
 def main():
-    global port, current_OS, sock, clients, list_of_users, res_C, main_C, green_C, blue_C, terminal_clear, config_data
+	global sock, nickname, server_connection, terminal_clear, server_pubkey_e, server_pubkey_n, server_pubkey, my_pubkey, my_privkey, res_C, main_C, green_C, blue_C
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clients = []
-    list_of_users = []
-    res_C = attr('reset')
-    main_C = fg('#FFD7AF')
-    green_C = fg('#00CD00')
-    blue_C = fg('#00FFFF')
+	res_C = attr('reset')
+	main_C = fg('#FFD7AF')
+	green_C = fg('#00CD00')
+	blue_C = fg('#00FFFF')
+	server_connection = False
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    try:
-        with open('s_config.json', 'r') as config:
-            config_data = json.load(config)
-    except:
-        print(fg('red') + 'Failed import json config' + res_C)
-        sys.exit()
+	try:
+		with open('c_config.json', 'r') as config:
+			config_data = json.load(config)
+	except:
+		print(fg('red') + 'Failed import json config' + res_C)
+		sys.exit()
 
-    current_OS = config_data['current_OS']
-    port = int(config_data['port'])
+	current_OS = config_data['current_OS']
+	server_ip = config_data['server_ip']
+	server_port = int(config_data['server_port'])
 
-    terminal_clear = functions.OS_definition(current_OS)
+	try:
+		nickname = str(sys.argv[1])
+	except:
+		print(fg('red') + 'Please enter username as a launch argument' + res_C)
+		sys.exit()
 
-    if terminal_clear == 'error':
-        print(fg('red') + 'Correct config usage: current_OS = (win/linux)' + res_C)
-        sys.exit()
+	if len(nickname) > 10:
+		print(fg('red') + 'Nickname is too long' + res_C)
+		sys.exit()
 
-    try:
-        sock.bind(('', port))
-    except:
-        print(fg('red') + 'Port is already in use' + res_C)
-        sys.exit()
+	terminal_clear = functions.OS_definition(current_OS)
+	if terminal_clear == 'error':
+		print(fg('red') + 'Correct config usage: current_OS = (win/linux)' + res_C)
+		sys.exit()
 
-    sock.listen(int(config_data['amount_of_users']))
+	os.system(terminal_clear)
+	print(green_C + 'loading ...' + res_C)
 
-    list_of_threads = []
+	my_pubkey, my_privkey = rsa.newkeys(2048)
+	print('[Keys generated]')
 
-    for i in range(int(config_data['amount_of_users'])):
-        list_of_threads.append(threading.Thread(target=receiving))
+	try:
+		sock.connect((server_ip, server_port))
+		server_pubkey_n = sock.recv(2048).decode('utf-8')
+		server_pubkey_e = sock.recv(2048).decode('utf-8')
+		server_pubkey = rsa.PublicKey(int(server_pubkey_n), int(server_pubkey_e))
+		sock.send(rsa.encrypt(nickname.encode('utf-8'), server_pubkey))
+		time.sleep(int(config_data['keys_exchanging_delay'])/2)
+		sock.send(str(my_pubkey.n).encode('utf-8'))
+		time.sleep(int(config_data['keys_exchanging_delay'])/2)
+		sock.send(str(my_pubkey.e).encode('utf-8'))
+	except:
+		if_error()
+		os.system(terminal_clear)
+		print(fg('red') + '\n\nFailed connection to the server\n\n' + res_C)
+		sys.exit()
+	else:
+		os.system(terminal_clear)
+		server_connection = True
+		print('[Successful connection to the server]')
 
-    for i in list_of_users:
-        i.setDaemon(True)
+	transmission_thread = threading.Thread(target=transmission)
+	receiving_thread = threading.Thread(target=receiving)
 
-    os.system(terminal_clear)
-    keys_generation()
+	transmission_thread.setDaemon(True)
+	receiving_thread.setDaemon(True)
 
-    for i in list_of_threads:
-        i.start()
+	print('[Client started]')
 
-    list_of_threads[0].join()
+	transmission_thread.start()
+	receiving_thread.start()
+
+	transmission_thread.join()
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        if_error()
-        pass
-    except:
-        if_error()
-        pass
+	try:
+		main()
+	except KeyboardInterrupt:
+		if_error()
+		sys.exit()
+	except:
+		if_error()
+		sys.exit()
